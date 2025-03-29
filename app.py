@@ -12,6 +12,20 @@ st.title("🔍 Análise Quantitativa de Estratégias - MetaTrader 5")
 st.sidebar.header("📁 Upload do Arquivo XML")
 xml_file = st.sidebar.file_uploader("Escolha o arquivo .xml exportado do Strategy Tester (MT5)", type="xml")
 
+if not xml_file:
+    if st.sidebar.button("🚀 Rodar Demo"):
+        xml_file = "files/demo.xml"
+        demo_trigger = True
+    else:
+        demo_trigger = False
+else:
+    demo_trigger = False
+
+with open("files/demo.xml", "rb") as f:
+    st.sidebar.download_button("📥 Baixar Exemplo XML", f, file_name="demo_mt5.xml")
+
+st.sidebar.markdown("---")
+
 
 @st.cache_data
 def parse_mt5_xml(file_path):
@@ -33,7 +47,6 @@ def parse_mt5_xml(file_path):
         parsed_rows.append(values)
     if len(parsed_rows) < 2:
         raise ValueError("O arquivo XML não contém dados suficientes para montar a tabela.")
-
     headers = parsed_rows[0]
     data = parsed_rows[1:]
     df = pd.DataFrame(data, columns=headers)
@@ -77,7 +90,7 @@ def pontuar_estrategia(row):
     return score, categoria
 
 
-if xml_file:
+if xml_file or demo_trigger:
     df_raw = parse_mt5_xml(xml_file)
     if not df_raw.shape[0] or not df_raw.shape[1]:
         st.error("⚠️ Nenhum dado encontrado no arquivo XML.")
