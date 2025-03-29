@@ -121,34 +121,40 @@ if xml_file or demo_trigger:
     if not df_filtered.empty:
         top = df_filtered.sort_values(by="Score", ascending=False).iloc[0]
 
-        st.subheader("📈 Radar da Melhor Estratégia")
+        st.subheader("📈 Radar das Top 3 Estratégias")
         st.markdown(
-            "Esta análise mostra visualmente o equilíbrio entre as principais métricas da melhor estratégia. Permite identificar pontos fortes e fracos de forma rápida."
+            "Esta análise mostra visualmente o equilíbrio entre as principais métricas das 3 estratégias com melhor pontuação. "
+            "Permite comparar seus pontos fortes e entender por que cada uma se destaca."
         )
-        radar_data = pd.DataFrame(
-            {
-                "Métrica": ["Trades", "Drawdown", "Recovery Factor", "Sharpe Ratio", "Expected Payoff"],
-                "Valor": [
-                    int(top["Trades"]),
-                    float(top["Drawdown"]),
-                    float(top["Recovery Factor"]),
-                    float(top["Sharpe Ratio"]),
-                    float(top["Expected Payoff"]),
-                ],
-            }
-        )
-        st.dataframe(top.to_frame(), use_container_width=True)
-        fig = px.line_polar(
-            radar_data,
-            r="Valor",
-            theta="Métrica",
-            line_close=True,
-            title=f"Radar - Estratégia Top ({top['Classificação']})",
-        )
-        st.markdown(
-            f"**Resumo:** Esta estratégia apresenta {top['Trades']} trades, payoff esperado de {top['Expected Payoff']}, drawdown de {top['Drawdown']}%, Sharpe de {top['Sharpe Ratio']} e fator de recuperação {top['Recovery Factor']}."
-        )
-        st.plotly_chart(fig, use_container_width=True)
+
+        top3 = df_filtered.sort_values(by="Score", ascending=False).head(3).copy()
+
+        for i, row in top3.iterrows():
+            st.markdown(
+                f"### Estratégia {i + 1} - Score: **{row['Score']}** - Classificação: **{row['Classificação']}**"
+            )
+            st.markdown(
+                f"**Resumo:** {row['Trades']} trades, Payoff Esperado: {row['Expected Payoff']}, "
+                f"Drawdown: {row['Drawdown']}%, Sharpe: {row['Sharpe Ratio']}, Recovery: {row['Recovery Factor']}."
+            )
+            radar_data = pd.DataFrame(
+                {
+                    "Métrica": ["Trades", "Drawdown", "Recovery Factor", "Sharpe Ratio", "Expected Payoff"],
+                    "Valor": [
+                        int(row["Trades"]),
+                        float(row["Drawdown"]),
+                        float(row["Recovery Factor"]),
+                        float(row["Sharpe Ratio"]),
+                        float(row["Expected Payoff"]),
+                    ],
+                }
+            )
+            fig = px.line_polar(
+                radar_data, r="Valor", theta="Métrica", line_close=True, title=f"Radar Estratégia {i + 1}"
+            )
+            st.plotly_chart(fig, use_container_width=True)
+
+        st.dataframe(top3.reset_index(drop=True), use_container_width=True)
 
         st.subheader("📌 Comparador de Estratégias")
         st.markdown(
